@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import { 
   Home, 
   Ticket, 
@@ -10,17 +11,24 @@ import {
   LogIn,
   Menu, 
   X, 
-  ChevronRight 
+  ChevronRight,
+  User,
+  LogOut,
+  Settings
 } from "lucide-react";
 
 const Navbar = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout, isAuthenticated } = useAuth();
   
   // Close sidebar when route changes
   useEffect(() => {
     setIsSidebarOpen(false);
+    setShowUserMenu(false);
   }, [location.pathname]);
   
   // Handle scroll effect
@@ -36,7 +44,7 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-  
+
   // Prevent body scroll when sidebar is open
   useEffect(() => {
     if (isSidebarOpen) {
@@ -56,12 +64,16 @@ const Navbar = () => {
     { name: "Packages", path: "/packages", icon: <Package size={18} /> },
     { name: "Hotels", path: "/hotels", icon: <Building2 size={18} /> },
     { name: "Guides", path: "/guides", icon: <UserRound size={18} /> },
-    { name: "Packages", path: "/packages", icon: <UserRound size={18} /> },
-    { name: "Hotels", path: "/hotels", icon: <UserRound size={18} /> },
     { name: "Contact", path: "/contact", icon: <Contact size={18} /> },
   ];
   
   const isActive = (path) => location.pathname === path;
+
+  const handleLogout = () => {
+    logout();
+    setShowUserMenu(false);
+    navigate('/');
+  };
 
   return (
     <>
@@ -94,16 +106,75 @@ const Navbar = () => {
                 {link.name}
               </Link>
             ))}
-            <button className="ml-4 bg-gradient-to-r from-pink-600 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white px-5 py-2 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 flex items-center gap-2">
-              <LogIn size={18} />
-              Login
-            </button>
+            
+            {/* Auth Section */}
+            {isAuthenticated ? (
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-2 bg-gradient-to-r from-pink-600 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300"
+                >
+                  <img
+                    src={user.avatar}
+                    alt={user.name}
+                    className="w-6 h-6 rounded-full"
+                  />
+                  <span className="hidden lg:block">{user.name.split(' ')[0]}</span>
+                </button>
+                
+                {/* User Dropdown */}
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50">
+                    <Link
+                      to="/dashboard"
+                      className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100"
+                      onClick={() => setShowUserMenu(false)}
+                    >
+                      <User size={16} />
+                      Dashboard
+                    </Link>
+                    <Link
+                      to="/settings"
+                      className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100"
+                      onClick={() => setShowUserMenu(false)}
+                    >
+                      <Settings size={16} />
+                      Settings
+                    </Link>
+                    <hr className="my-1" />
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-gray-100 w-full text-left"
+                    >
+                      <LogOut size={16} />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <Link
+                  to="/login"
+                  className="text-white hover:text-pink-300 font-medium transition-colors"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  to="/signup"
+                  className="bg-gradient-to-r from-pink-600 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white px-5 py-2 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 flex items-center gap-2"
+                >
+                  <LogIn size={18} />
+                  Sign Up
+                </Link>
+              </div>
+            )}
           </div>
           
           {/* Mobile Menu Button */}
           <button 
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="md:hidden flex items-center text-pink-400"
+            className="md:hidden flex items-center text-pink-400 relative"
             aria-label="Toggle menu"
           >
             <Menu size={24} className={`transition-opacity duration-300 ${isSidebarOpen ? 'opacity-0' : 'opacity-100'}`} />
@@ -144,6 +215,21 @@ const Navbar = () => {
             </div>
           </Link>
           
+          {/* User Info (Mobile) */}
+          {isAuthenticated && (
+            <div className="flex items-center gap-3 mb-6 p-3 bg-white/10 rounded-lg">
+              <img
+                src={user.avatar}
+                alt={user.name}
+                className="w-10 h-10 rounded-full"
+              />
+              <div>
+                <p className="text-white font-medium">{user.name}</p>
+                <p className="text-gray-300 text-sm">{user.email}</p>
+              </div>
+            </div>
+          )}
+          
           {/* Mobile Navigation Links */}
           <div className="flex flex-col gap-3">
             {navLinks.map((link) => (
@@ -163,18 +249,55 @@ const Navbar = () => {
                 <ChevronRight size={16} className="text-pink-400/70" />
               </Link>
             ))}
-          </div>
-          
-          {/* Mobile Login Button */}
-          <div className="mt-auto pt-8 border-t border-pink-900/30">
-            <button className="w-full bg-gradient-to-r from-pink-600 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white py-3 px-5 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2">
-              <LogIn size={18} />
-              Login
-            </button>
+            
+            {/* Mobile Auth Links */}
+            {isAuthenticated ? (
+              <>
+                <Link
+                  to="/dashboard"
+                  className="font-medium py-2.5 px-3 rounded-lg transition-colors flex items-center justify-between text-white hover:bg-pink-500/10 hover:text-pink-300"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-pink-400"><User size={18} /></span>
+                    <span>Dashboard</span>
+                  </div>
+                  <ChevronRight size={16} className="text-pink-400/70" />
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="font-medium py-2.5 px-3 rounded-lg transition-colors flex items-center justify-between text-red-400 hover:bg-red-500/10 w-full text-left"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-red-400"><LogOut size={18} /></span>
+                    <span>Logout</span>
+                  </div>
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="font-medium py-2.5 px-3 rounded-lg transition-colors flex items-center justify-between text-white hover:bg-pink-500/10 hover:text-pink-300"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-pink-400"><LogIn size={18} /></span>
+                    <span>Sign In</span>
+                  </div>
+                  <ChevronRight size={16} className="text-pink-400/70" />
+                </Link>
+                <Link
+                  to="/signup"
+                  className="bg-gradient-to-r from-pink-600 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white py-3 px-5 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 mt-2"
+                >
+                  <LogIn size={18} />
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
           
           {/* Footer Links in Mobile */}
-          <div className="mt-8 text-center">
+          <div className="mt-auto pt-8 border-t border-pink-900/30">
             <Link 
               to="/contributors" 
               className="text-pink-400 text-sm hover:underline"

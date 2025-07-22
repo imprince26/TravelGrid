@@ -4,25 +4,22 @@ import './index.css'
 import App from './App.jsx'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import Home from './pages/Home'
-
-
 import Contact from './pages/Contact'
-
 import Discover from './pages/Discover'
 import Trips from './pages/Trips'
 import Review from './pages/Review'
 import Forums from './pages/Forums'
 import Contributors from './pages/Contributors'
-
 import TicketBooking from './pages/TicketBooking'
 import TravelGuidesCarousel from './pages/TravelGuidesProfiles'
-import TicketBooking from './pages/TicketBooking'
-
 import TravelPackages from './pages/TravelPackages'
 import HotelBookingPage from './pages/HotelBookingPage'
 
-
-
+// Auth pages
+import Login from './pages/Login'
+import Signup from './pages/Signup'
+import Dashboard from './pages/Dashboard'
+import ProtectedRoute from './components/Auth/ProtectedRoute'
 
 const router = createBrowserRouter([
   {
@@ -35,15 +32,25 @@ const router = createBrowserRouter([
       { path: '/review', element: <Review /> },
       { path: '/forums', element: <Forums /> },
       { path: '/contributors', element: <Contributors /> },
-
       { path: '/ticket', element: <TicketBooking /> },
- 
-      {path: '/guides', element: <TravelGuidesCarousel /> },
+      { path: '/guides', element: <TravelGuidesCarousel /> },
       { path: '/packages', element: <TravelPackages /> },
       { path: '/hotels', element: <HotelBookingPage /> },
-
       { path: '/contact', element: <Contact /> },
-
+      
+      // Auth routes
+      { path: '/login', element: <Login /> },
+      { path: '/signup', element: <Signup /> },
+      
+      // Protected routes
+      { 
+        path: '/dashboard', 
+        element: (
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        ) 
+      },
     ],
   },
 ])
